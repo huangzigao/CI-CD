@@ -1,9 +1,33 @@
-deploy:
-  runs-on: ubuntu-latest
-  needs: build
-  if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+name: ci-cd Next.js CI
 
-  steps:
-    - name: Test server port
-      run: |
-        nc -vz ${{ secrets.SERVER_HOST }} ${{ secrets.SERVER_PORT }}
+on:
+  push:
+    branches: [develop, main]
+    paths:
+      - "ci-cd/**"
+      - ".github/workflows/ci-cd-nextjs.yml"
+  pull_request:
+    branches: [develop, main]
+    paths:
+      - "ci-cd/**"
+      - ".github/workflows/ci-cd-nextjs.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ci-cd
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: ci-cd/package-lock.json
+
+      - run: npm ci
+      - run: npm run build
